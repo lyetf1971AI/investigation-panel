@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0e1116">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Bot monitor</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230e1116'/%3E%3Cpath d='M10 44l12-14 10 8 12-20 10 10' fill='none' stroke='%2346d39a' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+:root{--bg:#0e1116;--card:#171b22;--line:#262c36;--tx:#e8ecf1;--mu:#8b95a5;--up:#46d39a;--dn:#ff6b6b;--am:#f2b84b;--ac:#6ea8fe}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+body{padding:12px 12px 28px;max-width:560px;margin:0 auto}
+.num{font-variant-numeric:tabular-nums}
+header{display:flex;align-items:center;gap:8px;margin:2px 2px 10px}
+h1{font-size:17px;margin:0;font-weight:650;flex:1}
+.badge{font-size:11px;font-weight:700;letter-spacing:.04em;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--mu)}
+.badge.live{color:#fff;background:#b3261e;border-color:#b3261e}
+.badge.paper{color:var(--ac);border-color:#2b3f63}
+.status{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 12px;margin-bottom:10px;font-size:13px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--mu);flex:none}
+.dot.ok{background:var(--up)}.dot.warn{background:var(--am)}.dot.bad{background:var(--dn)}
+.dot.pulse{animation:p 1s ease-in-out 3}
+@keyframes p{50%{transform:scale(1.9);opacity:.5}}
+.status .age{margin-left:auto;color:var(--mu);white-space:nowrap}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0}
+.tile .l{font-size:11.5px;color:var(--mu);text-transform:uppercase;letter-spacing:.05em}
+.tile .v{font-size:21px;font-weight:650;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile .s{font-size:12px;color:var(--mu);margin-top:1px}
+.up{color:var(--up)}.dn{color:var(--dn)}.am{color:var(--am)}
+h2{font-size:12px;color:var(--mu);text-transform:uppercase;letter-spacing:.06em;margin:16px 2px 6px;font-weight:600;display:flex}
+h2 span{margin-left:auto;text-transform:none;letter-spacing:0}
+.pos{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.pos.att{border-color:var(--dn)}
+.pos .r1{display:flex;align-items:baseline;gap:8px}
+.pos .tk{font-weight:700;font-size:16px}
+.pos .st{color:var(--mu);font-size:12.5px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pos .pl{font-weight:650;font-size:16px;white-space:nowrap}
+.pos .r2{display:flex;flex-wrap:wrap;gap:4px 14px;color:var(--mu);font-size:12.5px;margin-top:4px}
+.pos .r2 b{color:var(--tx);font-weight:500}
+.bar{height:4px;border-radius:2px;background:var(--line);margin-top:8px;position:relative;overflow:hidden}
+.bar i{position:absolute;top:0;bottom:0;left:50%;background:var(--up)}
+.bar i.neg{left:auto;right:50%;background:var(--dn)}
+.empty{color:var(--mu);text-align:center;padding:18px 8px;background:var(--card);border:1px dashed var(--line);border-radius:12px}
+.ev{font-size:12.5px;padding:7px 2px;border-bottom:1px solid var(--line);display:flex;gap:8px}
+.ev:last-child{border-bottom:0}
+.ev time{color:var(--mu);white-space:nowrap;flex:none}
+.ev .m{overflow-wrap:anywhere}
+.ev.new{animation:f 2.5s ease-out}
+@keyframes f{0%{background:#22324f}100%{background:transparent}}
+.note{background:#2a2413;border:1px solid #57461a;color:#f3d48a;border-radius:12px;padding:9px 12px;margin-bottom:10px;font-size:13px}
+.setup{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.setup p{margin:0 0 10px;color:var(--mu)}
+input{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#0b0e12;color:var(--tx);font-size:15px}
+button{margin-top:10px;width:100%;padding:11px;border-radius:10px;border:0;background:var(--ac);color:#06101f;font-weight:650;font-size:15px}
+footer{margin-top:18px;color:var(--mu);font-size:12px;text-align:center}
+footer a{color:var(--mu)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header><h1>TFTOsys bot</h1><span id="env" class="badge">—</span></header>
+
+<section id="setup" class="setup" hidden>
+  <p>Open this page from the “phone monitor” alert in the ntfy app and it sets itself up. Or type the bot’s ntfy topic (the one in the ntfy app, starting <b>tftosys-</b>).</p>
+  <form id="f"><input id="topic" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="tftosys-…"><button>Connect</button></form>
+</section>
+
+<main id="main" hidden>
+  <div class="status"><span id="dot" class="dot"></span><span id="bot">Waiting for the bot’s first update…</span><span id="age" class="age"></span></div>
+  <div id="note" class="note" hidden></div>
+  <div class="grid">
+    <div class="tile"><div class="l">Capital</div><div id="eq" class="v num">—</div><div id="cash" class="s num"></div></div>
+    <div class="tile"><div class="l">Margin available</div><div id="bp" class="v num">—</div><div id="room" class="s num"></div></div>
+    <div class="tile"><div class="l">Open P/L</div><div id="opl" class="v num">—</div><div id="risk" class="s num"></div></div>
+    <div class="tile"><div class="l">Closed P/L</div><div id="rpl" class="v num">—</div><div id="wins" class="s num"></div></div>
+  </div>
+  <h2>Positions <span id="npos"></span></h2>
+  <div id="pos"></div>
+  <h2>Orders and fills <span id="conn"></span></h2>
+  <div id="evs"></div>
+  <footer>Read-only. Figures are the bot’s last snapshot, priced at the mid.<br><a href="#" id="forget">Disconnect this phone</a></footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id)};
+var LS={get:function(k){try{return localStorage.getItem(k)}catch(e){return null}},set:function(k,v){try{localStorage.setItem(k,v)}catch(e){}},del:function(k){try{localStorage.removeItem(k)}catch(e){}}};
+var server="https://ntfy.sh", base=null, snap=null, events=[], es=null, lastMsg=0, pending=0;
+
+// ---- set-up: topic arrives once in the link (#t=...), is kept on this phone only, and is removed from the address
+(function(){
+  var h=location.hash.replace(/^#/,""), m=/(?:^|&)t=([A-Za-z0-9_-]{6,64})/.exec(h), s=/(?:^|&)s=([^&]+)/.exec(h);
+  if(m){LS.set("tfto_topic",m[1]); if(s){try{var u=new URL(decodeURIComponent(s[1])); if(u.protocol==="https:")LS.set("tfto_server",u.origin)}catch(e){}}
+    try{history.replaceState(null,"",location.pathname)}catch(e){location.hash=""}}
+  base=LS.get("tfto_topic"); server=LS.get("tfto_server")||server;
+})();
+
+function money(v,sign){if(v==null||isNaN(v))return "—";var a=Math.abs(v),s=a>=100?Math.round(a).toLocaleString("en-US"):a.toFixed(2);return (v<0?"−":(sign&&v>0?"+":""))+"$"+s}
+function cls(v){return v==null?"":v>0?"up":v<0?"dn":""}
+function el(tag,c,txt){var e=document.createElement(tag);if(c)e.className=c;if(txt!=null)e.textContent=txt;return e}
+function ago(t){var s=Math.max(0,Math.floor(Date.now()/1000-t));if(s<60)return "just now";if(s<3600)return Math.floor(s/60)+" min ago";if(s<86400)return Math.floor(s/3600)+" h "+Math.floor(s%3600/60)+" min ago";return Math.floor(s/86400)+" d ago"}
+function hhmm(t){var d=new Date(t*1000);return d.toLocaleString("en-SG",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit",hour12:false})}
+var STRUCT={IRON_CONDOR:"Iron condor",BULL_PUT:"Bull put",BEAR_CALL:"Bear call",BULL_CALL:"Bull call",BEAR_PUT:"Bear put"};
+
+function renderAge(){
+  if(!snap){$("age").textContent="";return}
+  $("age").textContent=ago(snap.t);
+  var h=snap.h||{}, old=Date.now()/1000-snap.t, note=$("note"), msg="";
+  if(pending&&Date.now()-pending<600000) msg="New order activity. Figures update when the bot finishes working the order.";
+  else if(h.s==="ACTIVE"&&old>2400&&!snap.ka) msg="No update for "+ago(snap.t).replace(" ago","")+". Check that the PC and the bot are running.";
+  note.hidden=!msg; note.textContent=msg;
+}
+function render(){
+  if(!snap)return;
+  var a=snap.a||{}, b=snap.b||{}, h=snap.h||{};
+  var env=$("env"); env.textContent=snap.env||"—"; env.className="badge "+(snap.env==="LIVE"?"live":"paper");
+  var st=h.s||"", dot=$("dot");
+  dot.className="dot "+(st==="ACTIVE"?"ok":st==="IDLE"?"":st?"bad":"")+(h.stop&&st==="ACTIVE"?" warn":"");
+  var label={ACTIVE:"Bot active",IDLE:"Market closed, bot idle",STALLED:"Bot STALLED",STUCK:"Bot STUCK",OFF:"Bot OFF"}[st]||"Bot status not reported yet";
+  $("bot").textContent=label+(h.stop?" · new entries stopped":"");
+  $("eq").textContent=money(a.eq); $("cash").textContent=a.cash!=null?"cash "+money(a.cash):"";
+  $("bp").textContent=money(a.bp);
+  $("room").textContent=a.room!=null?(a.room>0?money(a.room)+" free after "+Math.round((a.res||0)*100)+"% reserve":"none free after "+Math.round((a.res||0)*100)+"% reserve"):"";
+  $("room").className="s num"+(a.room!=null&&a.room<=0?" am":"");
+  $("opl").textContent=b.opl!=null?money(b.opl,true):(b.n? "partly priced":"$0"); $("opl").className="v num "+cls(b.opl);
+  $("risk").textContent=b.risk!=null?"max loss open "+money(b.risk)+(a.eq?" ("+Math.round(b.risk/a.eq*100)+"%)":""):"";
+  $("rpl").textContent=money(b.rpl,true); $("rpl").className="v num "+cls(b.rpl);
+  $("wins").textContent=b.closed?b.wins+" of "+b.closed+" trades won":"no closed trades yet";
+  var box=$("pos"); box.textContent=""; var ps=snap.p||[];
+  $("npos").textContent=ps.length?ps.length+" open":"";
+  if(!ps.length) box.appendChild(el("div","empty","No open positions"));
+  ps.forEach(function(p){
+    var c=el("div","pos"+(p.att?" att":"")), r1=el("div","r1");
+    r1.appendChild(el("span","tk",p.tk));
+    r1.appendChild(el("span","st",(STRUCT[p.st]||p.st||"")+" ×"+p.q+(p.bs?" · backspread":"")));
+    r1.appendChild(el("span","pl num "+cls(p.pl),p.att?"NEEDS ATTENTION":p.pl!=null?money(p.pl,true)+(p.pp!=null?" ("+(p.pp>0?"+":"")+Math.round(p.pp*100)+"%)":""):"no quote"));
+    if(p.att) r1.lastChild.className="pl dn";
+    c.appendChild(r1);
+    var r2=el("div","r2"); function kv(k,v){var s=el("span",null,k+" ");s.appendChild(el("b","num",v));r2.appendChild(s)}
+    kv("exp",(p.ex||"").slice(5)+(p.dte!=null?" · "+p.dte+"d":""));
+    kv(p.k==="C"?"credit":"debit",p.e!=null?p.e.toFixed(2):"—");
+    if(p.v!=null) kv("now",p.v.toFixed(2));
+    if(p.ml!=null) kv("max loss",money(p.ml));
+    if(p.sp!=null) kv("stock",p.sp.toFixed(2)+(p.sc!=null?" ("+(p.sc>0?"+":"")+p.sc.toFixed(1)+"%)":""));
+    c.appendChild(r2);
+    if(p.pl!=null&&p.ml){var bar=el("div","bar"),i=el("i",p.pl<0?"neg":"");i.style.width=Math.min(50,Math.abs(p.pl)/p.ml*50)+"%";bar.appendChild(i);c.appendChild(bar)}
+    box.appendChild(c);
+  });
+  if(snap.cut) box.appendChild(el("div","empty",snap.cut+" more not shown"));
+  renderAge();
+}
+function renderEvents(flash){
+  var box=$("evs"); box.textContent="";
+  var list=events.slice(0,8);
+  if(!list.length&&snap&&snap.ev) list=snap.ev.map(function(e){return {txt:e[2],when:e[0].replace("T"," ")}});
+  if(!list.length){box.appendChild(el("div","empty","No orders in the last 12 hours"));return}
+  list.forEach(function(e,i){var r=el("div","ev"+(flash&&i===0?" new":""));r.appendChild(el("time",null,e.when||hhmm(e.t)));r.appendChild(el("span","m",(e.title?e.title.replace(/^TFTOsys (PAPER|LIVE): /,"")+": ":"")+e.txt));box.appendChild(r)});
+}
+function takeSnapshot(m){
+  var s; try{s=JSON.parse(m.message)}catch(e){return false}
+  if(!s||s.v!==1||!s.t) return false;
+  if(snap&&s.t<snap.t) return false;
+  snap=s; pending=0; LS.set("tfto_snap",m.message); render(); renderEvents(false);
+  var d=$("dot"); d.classList.remove("pulse"); void d.offsetWidth; d.classList.add("pulse");
+  return true;
+}
+function takeAlert(m,live){
+  if(events.some(function(e){return e.id===m.id})) return;
+  events.unshift({id:m.id,t:m.time,title:m.title||"",txt:m.message||""});
+  events.sort(function(a,b){return b.t-a.t}); events=events.slice(0,20);
+  if(live){pending=Date.now(); renderAge()}
+  renderEvents(live);
+}
+function handle(m,live){
+  if(!m||m.event!=="message") return;
+  lastMsg=Math.max(lastMsg,m.time||0);
+  if(m.topic===base+"-status") takeSnapshot(m); else if(m.topic===base) takeAlert(m,live);
+}
+function poll(){
+  return fetch(server+"/"+base+"-status,"+base+"/json?poll=1&since=12h",{cache:"no-store"}).then(function(r){
+    if(!r.ok) throw new Error(r.status); return r.text()}).then(function(t){
+    t.split("\n").forEach(function(line){if(line){try{handle(JSON.parse(line),false)}catch(e){}}});
+    renderEvents(false);
+  });
+}
+function connect(){
+  if(es){try{es.close()}catch(e){}}
+  es=new EventSource(server+"/"+base+"-status,"+base+"/sse");
+  es.onopen=function(){$("conn").textContent="live"; $("conn").className="up"};
+  es.onerror=function(){$("conn").textContent="reconnecting…"; $("conn").className="am"};
+  es.onmessage=function(e){try{handle(JSON.parse(e.data),true)}catch(x){}};
+}
+function start(){
+  $("setup").hidden=true; $("main").hidden=false;
+  var c=LS.get("tfto_snap"); if(c){try{snap=JSON.parse(c)}catch(e){}} render(); renderEvents(false);
+  poll().catch(function(){$("conn").textContent="offline"; $("conn").className="am"}); connect();
+  setInterval(renderAge,20000);
+  document.addEventListener("visibilitychange",function(){if(!document.hidden){poll().catch(function(){}); if(!es||es.readyState===2) connect()}});
+  window.addEventListener("online",function(){poll().catch(function(){}); connect()});
+}
+$("f").addEventListener("submit",function(e){e.preventDefault();var v=$("topic").value.trim().replace(/-status$/,"");
+  if(/^[A-Za-z0-9_-]{6,64}$/.test(v)){LS.set("tfto_topic",v);base=v;start()}else{$("topic").focus()}});
+$("forget").addEventListener("click",function(e){e.preventDefault();LS.del("tfto_topic");LS.del("tfto_snap");LS.del("tfto_server");location.reload()});
+window.addEventListener("hashchange",function(){if(/(?:^|[#&])t=/.test(location.hash))location.reload()});
+if(base) start(); else $("setup").hidden=false;
+})();
+</script>
+</body>
+</html>
