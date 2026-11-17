@@ -86,7 +86,7 @@ h1 .brk{font-size:12px;font-weight:600;color:#0F9D8A;letter-spacing:.04em;margin
   <div id="pos"></div>
   <h2>Orders and fills <span id="conn"></span></h2>
   <div id="evs"></div>
-  <footer>Read-only. Figures are the bot’s last snapshot, priced at the mid.<br><a href="#" id="forget">Disconnect this phone</a></footer>
+  <footer>Read-only. Figures are the bot’s last snapshot, priced at the mid.<br><span id="ver" class="num">Page V6.1.2</span><br><a href="#" id="forget">Disconnect this phone</a></footer>
 </main>
 
 <script>
@@ -122,6 +122,7 @@ function renderAge(){
 function render(){
   if(!snap)return;
   var a=snap.a||{}, b=snap.b||{}, h=snap.h||{};
+  $("ver").textContent="Bot "+(snap.ver||"version not sent yet")+" · page V6.1.2";
   var env=$("env"); env.textContent=snap.env||"—"; env.className="badge "+(snap.env==="LIVE"?"live":"paper");
   var st=h.s||"", dot=$("dot");
   dot.className="dot "+(st==="ACTIVE"?"ok":st==="IDLE"?"":st?"bad":"")+(h.stop&&st==="ACTIVE"?" warn":"");
